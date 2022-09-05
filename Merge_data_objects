@@ -1,0 +1,91 @@
+import cdstoolbox as ct
+
+# Defining an application layout with 3 input collumns locate above the outputs.
+layout = {
+    'input_ncols': 1,
+    'output_ncols': 1,
+    'output_align': 'bottom'
+}
+
+@ct.application(
+    title='Extract a time series and plot graph',
+    layout=layout,
+    description='Plot the the time series of a user selected variable at a user selected location.'
+)
+
+@ct.output.download()
+
+def download_application():
+    y1 = ['1981', '1982']
+    y2 = ['1983', '1984']
+    y3 = ['1985', '1986']
+    y4 = ['1987', '1988']
+    y5 = ['1989', '1990']
+    
+    def download(serie):
+        d = ct.catalogue.retrieve(
+            'reanalysis-era5-single-levels',
+            {
+                'product_type': 'reanalysis',
+                'variable': ['peak_wave_period', 'significant_height_of_wind_waves'],
+                'year': serie,
+                'month': ['01', '02', '03', '04', '05', '06','07', '08', '09', '10', '11', '12'],
+                'day': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '10', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+                'time': ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00', '06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'],
+                 'area': [33, -17.5, 32.5, -16.5],
+            }
+        )
+        return d
+    
+    
+    data1 = download(y1)
+    d1_P1 = ct.cube.interpolate(data1, lon=-17.0, lat=33.0)
+    d1_P2 = ct.cube.interpolate(data1, lon=-16.5, lat=33.0)    
+    d1_P3 = ct.cube.interpolate(data1, lon=-17.0, lat=32.5)
+    d1_P4 = ct.cube.interpolate(data1, lon=-16.5, lat=32.5)
+    
+    data2 = download(y2)
+    d2_P1 = ct.cube.interpolate(data2, lon=-17.0, lat=33.0)
+    d2_P2 = ct.cube.interpolate(data2, lon=-16.5, lat=33.0)    
+    d2_P3 = ct.cube.interpolate(data2, lon=-17.0, lat=32.5)
+    d2_P4 = ct.cube.interpolate(data2, lon=-16.5, lat=32.5)
+    
+    data3 = download(y3)
+    d3_P1 = ct.cube.interpolate(data3, lon=-17.0, lat=33.0)
+    d3_P2 = ct.cube.interpolate(data3, lon=-16.5, lat=33.0)    
+    d3_P3 = ct.cube.interpolate(data3, lon=-17.0, lat=32.5)
+    d3_P4 = ct.cube.interpolate(data3, lon=-16.5, lat=32.5)
+    
+    data4 = download(y4)
+    d4_P1 = ct.cube.interpolate(data4, lon=-17.0, lat=33.0)
+    d4_P2 = ct.cube.interpolate(data4, lon=-16.5, lat=33.0)    
+    d4_P3 = ct.cube.interpolate(data4, lon=-17.0, lat=32.5)
+    d4_P4 = ct.cube.interpolate(data4, lon=-16.5, lat=32.5)
+
+    data5 = download(y5)
+    d5_P1 = ct.cube.interpolate(data5, lon=-17.0, lat=33.0)
+    d5_P2 = ct.cube.interpolate(data5, lon=-16.5, lat=33.0)    
+    d5_P3 = ct.cube.interpolate(data5, lon=-17.0, lat=32.5)
+    d5_P4 = ct.cube.interpolate(data5, lon=-16.5, lat=32.5)
+    
+    pwp_p1 = [d1_P1[0], d2_P1[0], d3_P1[0], d4_P1[0], d5_P1[0]]
+    pwp_p2 = [d1_P2[0], d2_P2[0], d3_P2[0], d4_P2[0], d5_P2[0]]
+    pwp_p3 = [d1_P3[0], d2_P3[0], d3_P3[0], d4_P3[0], d5_P3[0]]
+    pwp_p4 = [d1_P4[0], d2_P4[0], d3_P4[0], d4_P4[0], d5_P4[0]]
+
+    shww_p1 = [d1_P1[1], d2_P1[1], d3_P1[1], d4_P1[1], d5_P1[1]]
+    shww_p2 = [d1_P2[1], d2_P2[1], d3_P2[1], d4_P2[1], d5_P2[1]]
+    shww_p3 = [d1_P3[1], d2_P3[1], d3_P3[1], d4_P3[1], d5_P3[1]]
+    shww_p4 = [d1_P4[1], d2_P4[1], d3_P4[1], d4_P4[1], d5_P4[1]]
+    
+    pwp = pwp_p1 + pwp_p2 + pwp_p3 + pwp_p4
+    shww = shww_p1 + shww_p2 + shww_p3 + shww_p4
+    
+    var1 = ct.cube.concat(pwp, dim='time')
+    var2 = ct.cube.concat(shww, dim='time')
+    
+    points = [var1, var2]
+
+    csv = ct.cdm.to_csv(points, sep=';', na_rep='NoData')
+
+    return csv
